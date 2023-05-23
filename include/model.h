@@ -19,6 +19,7 @@ typedef struct {
 
 Model create_empty_model(int);
 Model load_model_from_file(char*);
+void save_model_to_file(Model,char*);
 
 void free_model(Model);
 

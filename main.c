@@ -96,12 +96,12 @@ void* render_tile(void* arg) {
 			rd = vnormalize(rd);
 
 			float t;
-			Voxel* v = voxel_intersect((vec3f){0,0,-512}, rd, obj.tree.root, obj.tree.levels-1, &t);
+			Voxel* v = voxel_intersect((vec3f){0,0,-128}, rd, obj.tree.root, obj.tree.levels-1, &t);
 
 			if (v == NULL)
 				continue;
 
-			set_pixel(output, data->x,data->y, v->color.x*255,v->color.y*255,v->color.z*255);
+			set_pixel(output, data->x,data->y, v->color.x,v->color.y,v->color.z);
 		}
 	}
 }
@@ -113,22 +113,28 @@ int main() {
 	srand(start_time);
 
 	output = init_image(512,512);
-	obj = create_empty_model(10);
 
 
-	for (int i = 0; i < pow(8,9); i++) {
-		//if (rand() % 128 != 0)
-		//	continue;
+	/*obj = create_empty_model(9);
 
+	for (int i = 0; i < pow(8,8); i++) {
+		if (rand() % 128 != 0)
+			continue;
 
 		Voxel* vox = malloc(sizeof(Voxel));
 		get_node_by_id(obj.tree, i)->value = vox;
 		vox->color = (vec3f){
-			(float)(rand()&255)/255.,
-			(float)(rand()&255)/255.,
-			(float)(rand()&255)/255.
+			rand()&255,
+			rand()&255,
+			rand()&255
 		};
 	}
+
+	save_model_to_file(obj, "object.oct");
+
+	return;*/
+
+	obj = load_model_from_file("object.oct");
 
 
 	tile_data tiles[threads_count];
