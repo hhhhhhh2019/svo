@@ -5,11 +5,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pthread.h>
+
+
+
+#define threads_count 8
 
 
 
 RenderImage output;
 Model obj;
+
+
+typedef struct {
+	int x, ix;
+	int y, iy;
+	int w, iw;
+	int h, ih;
+} tile_data;
 
 
 char ray_box(vec3f ro, vec3f rd, float size, float *t) {
@@ -71,19 +84,41 @@ Voxel* voxel_intersect(vec3f ro, vec3f rd, ONode* node, int level, float *t) {
 }
 
 
+void* render_tile(void* arg) {
+	tile_data* data = arg;
+
+	for (; data->w > 0; data->w--, data->x++) {
+		data->h = data->ih;
+		data->y = data->iy;
+
+		for (; data->h > 0; data->h--, data->y++) {
+			vec3f rd = {(float)data->x / (float)output.width * 2 - 1, (float)data->y / (float)output.height * 2 - 1, 1};
+			rd = vnormalize(rd);
+
+			float t;
+			Voxel* v = voxel_intersect((vec3f){0,0,-512}, rd, obj.tree.root, obj.tree.levels-1, &t);
+
+			if (v == NULL)
+				continue;
+
+			set_pixel(output, data->x,data->y, v->color.x*255,v->color.y*255,v->color.z*255);
+		}
+	}
+}
+
+
 int main() {
 	time_t start_time = time(NULL);
 
 	srand(start_time);
 
-	output = init_image(1024,1024);
-	obj = create_empty_model(8);
+	output = init_image(512,512);
+	obj = create_empty_model(10);
 
-	//printf("%p\n", get_node_by_id(obj.tree, 8));
 
-	for (int i = 0; i < pow(8,7); i++) {
-		if (rand() % 128 != 0)
-			continue;
+	for (int i = 0; i < pow(8,9); i++) {
+		//if (rand() % 128 != 0)
+		//	continue;
 
 
 		Voxel* vox = malloc(sizeof(Voxel));
@@ -95,26 +130,30 @@ int main() {
 		};
 	}
 
-	time_t draw_time = time(NULL);
 
+	tile_data tiles[threads_count];
+	pthread_t threads[threads_count];
+
+	for (int i = 0; i < threads_count; i++) {
+		tiles[i].x = tiles[i].ix = output.width / threads_count * i;
+		tiles[i].y = tiles[i].iy = 0;
+		tiles[i].w = tiles[i].iw = output.width / threads_count;
+		tiles[i].h = tiles[i].ih = output.height;
+	}
+
+
+	time_t draw_time = time(NULL);
 
 	printf("init finish: %d\n", draw_time - start_time);
 
 
-	for (int i = 0; i < output.width; i++) {
-		for (int j = 0; j < output.height; j++) {
-			vec3f rd = {(float)i / (float)output.width * 2 - 1, (float)j / (float)output.height * 2 - 1, 1};
-			rd = vnormalize(rd);
-
-			float t;
-			Voxel* v = voxel_intersect((vec3f){0,0,-128}, rd, obj.tree.root, obj.tree.levels-1, &t);
-
-			if (v == NULL)
-				continue;
-
-			set_pixel(output, i,j, v->color.x*255,v->color.y*255,v->color.z*255);
-		}
+	for (int i = 0; i < threads_count; i++) {
+		pthread_create(&threads[i], NULL, render_tile, &tiles[i]);
 	}
+
+	for (int i = 0; i < threads_count; i++)
+		pthread_join(threads[i], NULL);
+
 
 	printf("draw finish: %d\n", time(NULL) - draw_time);
 

@@ -52,12 +52,32 @@ mat3 vmmul(mat3 a, mat3 b) {
 }
 
 
+float Q_rsqrt(float number) {
+	const float x2 = number * 0.5F;
+	const float threehalfs = 1.5F;
+
+	union {
+		float f;
+		unsigned int i;
+	} conv = {number};
+	conv.i = 0x5f3759df - ( conv.i >> 1 );
+	conv.f *= threehalfs - x2 * conv.f * conv.f;
+	return conv.f;
+}
+
+
+float vdot(vec3f a, vec3f b) {
+	return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+
 float vlength(vec3f v) {
 	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 vec3f vnormalize(vec3f v) {
-	return vdivf(v, vlength(v));
+	//return vdivf(v, vlength(v));
+	return vmulf(v, Q_rsqrt(vdot(v,v)));
 }
 
 
