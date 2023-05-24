@@ -83,8 +83,9 @@ int main() {
 
 	srand(start_time);
 
-	output = init_image(2048,2048);
-	tree = init_svo(6);
+	output = init_image(1024,1024);
+	tree = load_svo_from_file("object.oct");
+	/*tree = init_svo(6);
 
 	for (int i = 0; i < 64; i++) {
 		Voxel* vox = malloc(sizeof(Voxel));
@@ -104,8 +105,12 @@ int main() {
 			free(vox);
 	}
 
+	save_svo_to_file(tree, "object.oct");*/
+
 	time_t init_time = time(NULL);
 	printf("init fisnished: %d\n", init_time - start_time);
+
+	//print_svo(tree);
 
 	for (int i = 0; i < output.width; i++) {
 		for (int j = 0; j < output.height; j++) {

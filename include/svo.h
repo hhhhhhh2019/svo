@@ -30,5 +30,8 @@ void coords_to_ids(short,short,short, char[]);
 
 void print_svo(SVO);
 
+void save_svo_to_file(SVO, char*);
+SVO load_svo_from_file(char*);
+
 
 #endif // SVO_H

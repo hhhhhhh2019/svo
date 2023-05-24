@@ -1,6 +1,9 @@
 #include <svo.h>
+#include <model.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 SVO init_svo(char levels) {
@@ -107,4 +110,103 @@ void print_node(ONode* node, int level) {
 void print_svo(SVO tree) {
 	printf("%d\n", tree.levels);
 	print_node(tree.root, 0);
+}
+
+
+void save_node_to_file(ONode* node, int f) {
+	if (node == NULL)
+		return;
+
+	char childs = 0;
+
+	for (int i = 0; i < 8; i++)
+		if (node->childs[i] != NULL)
+			childs |= 1 << i;
+
+	write(f, &childs, 1);
+
+	if (node->data != NULL) { // будем считать, что мы всегда храним тут воксели
+		Voxel* v = node->data;
+
+		write(f, &v->color, sizeof(v->color));
+	} else {
+		for (int i = 0; i < 8; i++)
+			save_node_to_file(node->childs[i], f);
+	}
+}
+
+
+void save_svo_to_file(SVO tree, char* filename) {
+	int f = open(filename, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+
+	write(f, &tree.levels, sizeof(tree.levels));
+
+	save_node_to_file(tree.root, f);
+
+	close(f);
+}
+
+
+void load_node_from_file(ONode* node, int f) {
+	char childs;
+
+	read(f, &childs, 1);
+
+	if (childs == 0) {
+		vec3f color;
+		read(f, &color, sizeof(color));
+
+		Voxel* vox = malloc(sizeof(Voxel));
+		vox->color = color;
+
+		node->data = vox;
+	} else {
+		for (int i = 0; i < 8; i++) {
+			if ((childs & (1 << i)) == 0)
+				continue;
+
+			node->childs[i] = calloc(sizeof(ONode),1);
+			load_node_from_file(node->childs[i], f);
+		}
+	}
+}
+
+
+
+char count_data_dists(ONode* node) {
+	if (node->data != NULL) {
+		node->data_dist = 1;
+		return 1;
+	}
+
+	for (int i = 0; i < 8; i++) {
+		if (node->childs[i] == NULL)
+			continue;
+
+		char c = count_data_dists(node->childs[i]);
+
+		if (node->data_dist < c + 1)
+			node->data_dist = c;
+	}
+
+	return node->data_dist;
+}
+
+
+SVO load_svo_from_file(char* filename) {
+	int f = open(filename, O_RDONLY);
+
+	char levels;
+
+	read(f, &levels, 1);
+
+	SVO tree = init_svo(levels);
+
+	load_node_from_file(tree.root, f);
+
+	close(f);
+
+	count_data_dists(tree.root);
+
+	return tree;
 }
