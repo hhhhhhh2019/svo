@@ -1,7 +1,7 @@
 LIBS = libpng
 
-CC = gcc -I ./include -c  -g `pkg-config --cflags $(LIBS)`
-LD = gcc  -g `pkg-config --libs $(LIBS)` -lm
+CC = gcc -I ./include -c -fsanitize=address -g `pkg-config --cflags $(LIBS)`
+LD = gcc -fsanitize=address -g `pkg-config --libs $(LIBS)` -lm
 
 
 SOURCES = $(wildcard *.c)

@@ -2,7 +2,6 @@
 #define MODEL_H
 
 
-#include <octree.h>
 #include <vector.h>
 
 
@@ -13,7 +12,6 @@ typedef struct {
 
 
 typedef struct {
-	OcTree tree;
 } Model;
 
 
