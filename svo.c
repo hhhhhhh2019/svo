@@ -153,11 +153,13 @@ void load_node_from_file(ONode* node, int f) {
 	read(f, &childs, 1);
 
 	if (childs == 0) {
-		vec3f color;
+		char color[3];
 		read(f, &color, sizeof(color));
 
 		Voxel* vox = malloc(sizeof(Voxel));
-		vox->color = color;
+		vox->color[0] = color[0];
+		vox->color[1] = color[1];
+		vox->color[2] = color[2];
 
 		node->data = vox;
 	} else {

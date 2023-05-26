@@ -3,15 +3,19 @@
 
 
 #include <vector.h>
+#include <svo.h>
 
 
 
 typedef struct {
-	vec3f color;
+	char color[3];
 } Voxel;
 
 
 typedef struct {
+	SVO tree;
+	vec3f pos;
+	vec3f rot;
 } Model;
 
 
