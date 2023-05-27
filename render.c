@@ -103,13 +103,13 @@ void update_camera_rot_mat() {
 
 
 
-void save_node_to_array(ONode*, char**, int*);
+void save_node_to_array(ONode*, unsigned char**, int*);
 
-void save_node_to_array(ONode* node, char** array, int* size) {
+void save_node_to_array(ONode* node, unsigned char** array, int* size) {
 	if (node == NULL)
 		return;
 
-	char childs = 0;
+	unsigned char childs = 0;
 
 	for (int i = 0; i < 8; i++)
 		if (node->childs[i] != NULL)
@@ -135,30 +135,38 @@ void save_node_to_array(ONode* node, char** array, int* size) {
 
 
 
+unsigned char* array = NULL;
+int size;
+
+
 
 void render_model(Model model) {
-	/*char* array = malloc(0);
-	int size;
+	if (array == NULL) {
+		array = malloc(0);
 
-	save_node_to_array(model.tree.root, &array, &size);*/
+		save_node_to_array(model.tree.root, &array, &size);
 
-	int size = 4;
-	char array[] = {
-		255,255,255,255,
-		255,255,255,255,
-		255,255,255,255,
-		255,255,255,255,
-		255,255,255,255,
-		255,255,255,255,
-		255,255,255,255,
-		255,255,255,255,
+		//for (int i = 0; i < size; i++)
+		//	printf("%d ", array[i]);
+	}
+
+	/*unsigned char array[] = {
+		1|2|32,
+			1|2|32,
+				0, 255,0,0,
+				0, 0,255,0,
+				0, 0,0,255,
+
+			0, 0,255,0,
+			0, 0,0,255,
 	};
+	int size = sizeof(array);*/
 
 
 	glUseProgram(comp_prog);
 
 	glUniform1iv(3, 1, (const GLint*)&size);
-	glUniform1iv(4, size, (const GLint*)array);
+	glUniform1iv(4, (size+3)/4, (const GLuint*)array);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, outTex);

@@ -32,13 +32,35 @@ void key_release(int);
 
 
 int main() {
-	init_window(1000,800);
+	init_window(800,800);
 	init_shaders();
 	init_render();
 
-	camera_pos = (vec3f){0,0,-64};
+	camera_pos = (vec3f){0,0,-32};
 
-	Model obj1 = load_model_from_file("object.oct");
+	//Model obj1 = load_model_from_file("object.oct");
+
+	Model obj1 = create_empty_model(3);
+
+	for (int x = 0; x < 2<<(obj1.tree.levels-1); x++) {
+		for (int y = 0; y < 2<<(obj1.tree.levels-1); y++) {
+			for (int z = 0; z < 2<<(obj1.tree.levels-1); z++) {
+				char ids[16];
+				coords_to_ids(x,y,z, ids);
+
+				if ((x&y&z) != 0)
+					continue;
+
+				Voxel* vox = malloc(sizeof(Voxel));
+				vox->color[0] = rand()&255;
+				vox->color[1] = rand()&255;
+				vox->color[2] = rand()&255;
+
+				if (add_data(&obj1.tree, obj1.tree.levels, ids, vox) == 0)
+					free(vox);
+			}
+		}
+	}
 
 	while (running) {
 		xcb_warp_pointer(dpy, XCB_NONE, screen->root, 0,0,0,0, 100,100);
