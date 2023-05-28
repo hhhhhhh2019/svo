@@ -104,9 +104,9 @@ void update_camera_rot_mat() {
 
 
 
-void save_node_to_array(ONode*, unsigned char**, int*);
+void save_node_to_array(ONode*, unsigned short**, int*);
 
-void save_node_to_array(ONode* node, unsigned char** array, int* size) {
+void save_node_to_array(ONode* node, unsigned short** array, int* size) {
 	unsigned char childs = 0;
 	char childs_count = 0;
 
@@ -122,7 +122,7 @@ void save_node_to_array(ONode* node, unsigned char** array, int* size) {
 			return;
 		Voxel* v = node->data;
 		*size += 3 + 1;
-		*array = realloc(*array, *size);
+		*array = realloc(*array, *size*2);
 		(*array)[*size - 3 - 1] = 0;
 		(*array)[*size - 3 + 0] = v->color[0];
 		(*array)[*size - 3 + 1] = v->color[1];
@@ -131,7 +131,7 @@ void save_node_to_array(ONode* node, unsigned char** array, int* size) {
 	}
 
 	*size += childs_count + 1;
-	*array = realloc(*array, *size);
+	*array = realloc(*array, *size*2);
 
 	(*array)[*size - childs_count - 1] = childs;
 
@@ -153,9 +153,39 @@ void save_node_to_array(ONode* node, unsigned char** array, int* size) {
 
 
 
-unsigned char* array = NULL;
+unsigned short* array = NULL;
 int size;
 
+void print_node2(unsigned short**, int);
+
+void print_node2(unsigned short** array, int level) {
+	char childs = **array;
+	*array += 2;
+
+	putc('\n', stdout);
+
+	for (int i = 0; i < level; i++)
+		putc('\t', stdout);
+
+	printf("%u, ", childs&0xff);
+
+	for (int i = 0; i < 8; i++) {
+		if ((childs & (1 << i)) != 0) {
+			printf("%u, ", **array & 0xffff);
+			*array += 2;
+		}
+	}
+
+	if (childs == 0) {
+		printf("%u, ", (**array) & 0xff);
+		*array += 2;
+		printf("%u, ", (**array) & 0xff);
+		*array += 2;
+		printf("%u, ", (**array) & 0xff);
+		*array += 2;
+		return;
+	}
+}
 
 
 void render_model(Model model) {
@@ -164,21 +194,13 @@ void render_model(Model model) {
 
 		save_node_to_array(model.tree.root, &array, &size);
 
-		/*for (int i = 0; i < size; i++) {
-			if ((i&3) == 0)
-				putc('\n', stdout);
-			printf("%d ", array[i]);
-		}
+		unsigned short* a = array;
 
-		fflush(stdout);*/
-
-		//exit(0);
+		print_node2(&a, 0);
+		fflush(stdout);
 	}
 
-	/*unsigned char array[] = {
-		3, 3,7,
-		0, 255,0,0,
-		0, 0,255,0
+	/*unsigned short array[] = {
 	};
 	int size = sizeof(array);*/
 
@@ -186,7 +208,7 @@ void render_model(Model model) {
 	glUseProgram(comp_prog);
 
 	//glUniform1iv(3, 1, (const GLint*)&tree_size);
-	glUniform1iv(4, (size+3)/4, (const GLuint*)array);
+	glUniform1iv(4, (size+3)/2, (const GLuint*)array);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, outTex);

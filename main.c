@@ -48,7 +48,7 @@ int main() {
 
 	//Model obj1 = load_model_from_file("object.oct");
 
-	Model obj1 = create_empty_model(2);
+	Model obj1 = create_empty_model(3);
 
 	for (int x = 0; x < 2<<(obj1.tree.levels-1); x++) {
 		for (int y = 0; y < 2<<(obj1.tree.levels-1); y++) {

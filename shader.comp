@@ -11,23 +11,23 @@ layout(location = 3) uniform int tree_size;
 layout(location = 4) uniform int tree[1000];
 
 
-#define get_tree_data(fst) ((uint(tree[(fst)/4]) >> ((fst & 3) * 8)) & 0xff)
+#define get_tree_data(fst) ((uint(tree[(fst)/2]) >> ((fst & 1) * 16)) & 0xffff)
 
 
 uint stack_fst[512];
 vec3 stack_pos[512];
-int stack_level[512];
+uint stack_level[512];
 
-int sp = 0;
+uint sp = 0;
 
-void push(in uint fst, in vec3 pos, in int level) {
+void push(in uint fst, in vec3 pos, in uint level) {
 	stack_fst[sp] = fst;
 	stack_pos[sp] = pos;
 	stack_level[sp] = level;
 	sp++;
 }
 
-void pop(out uint fst, out vec3 pos, out int level) {
+void pop(out uint fst, out vec3 pos, out uint level) {
 	sp--;
 	fst = stack_fst[sp];
 	pos = stack_pos[sp];
@@ -52,7 +52,7 @@ bool ray_box(vec3 ro, vec3 rd, float size, out float t) {
 
 	t = tmin;
 
-	return tmin > 0 && tmin < tmax;
+	return tmin >= 0 && tmin < tmax;
 }
 
 
@@ -67,31 +67,34 @@ void main() {
 	vec4 color = vec4(0.2,0.4,0.8,1) * 255;
 
 
-	push(0, vec3(0), 2);
+	push(0, vec3(0), 4);
 
 
 	float tmin = 1./0.;
 	float t;
 
-	int iters = 0;
+	uint iters = 0;
 
 	while (sp > 0 && iters < 100) {
 		iters++;
 
 		uint fst;
 		vec3 pos;
-		int level;
+		uint level;
 
 		pop(fst,pos,level);
 
 		float size = 1 << level;
 
-		if (!ray_box(ro+pos, rd, size, t))
+		if (!ray_box(ro-pos, rd, size, t))
 			continue;
 
 		uint childs = get_tree_data(fst);
 
-		if (childs == 0) {
+		if (level == 0 || childs == 0) {
+			if (childs != 0)
+				continue;
+
 			tmin = min(t,tmin);
 
 			color = mix(color, vec4(
@@ -100,12 +103,13 @@ void main() {
 				get_tree_data(fst+3),
 			255), step(t,tmin));
 		} else {
+			int id = 0;
 			for (int i = 0; i < 8; i++) {
 				if ((childs & (1 << i)) != 0) {
 					vec3 dp = (vec3(i&1,(i&2)>>1,(i&4)>>2) - vec3(0.5)) * size;
 
-					fst++;
-					push(get_tree_data(fst), pos+dp, level-1);
+					id++;
+					push(get_tree_data(fst+id), pos+dp, level-1);
 				}
 			}
 		}
