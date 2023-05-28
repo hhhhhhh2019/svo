@@ -5,6 +5,7 @@
 #include <svo.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 
 
@@ -106,30 +107,47 @@ void update_camera_rot_mat() {
 void save_node_to_array(ONode*, unsigned char**, int*);
 
 void save_node_to_array(ONode* node, unsigned char** array, int* size) {
-	if (node == NULL)
-		return;
-
 	unsigned char childs = 0;
+	char childs_count = 0;
 
-	for (int i = 0; i < 8; i++)
-		if (node->childs[i] != NULL)
+	for (int i = 0; i < 8; i++) {
+		if (node->childs[i] != NULL) {
 			childs |= 1 << i;
+			childs_count++;
+		}
+	}
 
-	*array = realloc(*array, ++*size);
-	(*array)[*size-1] = childs;
-
-	if (node->data != NULL) { // будем считать, что мы всегда храним тут воксели
+	if (childs == 0) {
+		if (node->data == NULL)
+			return;
 		Voxel* v = node->data;
-
-		*size += 3;
-
+		*size += 3 + 1;
 		*array = realloc(*array, *size);
-		(*array)[*size-1] = v->color[2];
-		(*array)[*size-2] = v->color[1];
-		(*array)[*size-3] = v->color[0];
-	} else {
-		for (int i = 0; i < 8; i++)
-			save_node_to_array(node->childs[i], array, size);
+		(*array)[*size - 3 - 1] = 0;
+		(*array)[*size - 3 + 0] = v->color[0];
+		(*array)[*size - 3 + 1] = v->color[1];
+		(*array)[*size - 3 + 2] = v->color[2];
+		return;
+	}
+
+	*size += childs_count + 1;
+	*array = realloc(*array, *size);
+
+	(*array)[*size - childs_count - 1] = childs;
+
+	int fst = *size - childs_count;
+
+	for (int i = 0; i < 8; i++) {
+		if (node->childs[i] == NULL)
+			continue;
+
+		int last_size = *size;
+
+		save_node_to_array(node->childs[i], array, size);
+
+		(*array)[fst++] = last_size;
+
+		last_size = *size;
 	}
 }
 
@@ -146,26 +164,28 @@ void render_model(Model model) {
 
 		save_node_to_array(model.tree.root, &array, &size);
 
-		//for (int i = 0; i < size; i++)
-		//	printf("%d ", array[i]);
+		/*for (int i = 0; i < size; i++) {
+			if ((i&3) == 0)
+				putc('\n', stdout);
+			printf("%d ", array[i]);
+		}
+
+		fflush(stdout);*/
+
+		//exit(0);
 	}
 
 	/*unsigned char array[] = {
-		1|2|32,
-			1|2|32,
-				0, 255,0,0,
-				0, 0,255,0,
-				0, 0,0,255,
-
-			0, 0,255,0,
-			0, 0,0,255,
+		3, 3,7,
+		0, 255,0,0,
+		0, 0,255,0
 	};
 	int size = sizeof(array);*/
 
 
 	glUseProgram(comp_prog);
 
-	glUniform1iv(3, 1, (const GLint*)&size);
+	//glUniform1iv(3, 1, (const GLint*)&tree_size);
 	glUniform1iv(4, (size+3)/4, (const GLuint*)array);
 
 	glActiveTexture(GL_TEXTURE0);
