@@ -194,10 +194,10 @@ void render_model(Model model) {
 
 		save_node_to_array(model.tree.root, &array, &size);
 
-		unsigned short* a = array;
+		//unsigned short* a = array;
 
-		print_node2(&a, 0);
-		fflush(stdout);
+		//print_node2(&a, 0);
+		//fflush(stdout);
 	}
 
 	/*unsigned short array[] = {
@@ -207,8 +207,7 @@ void render_model(Model model) {
 
 	glUseProgram(comp_prog);
 
-	//glUniform1iv(3, 1, (const GLint*)&tree_size);
-	glUniform1iv(4, (size+3)/2, (const GLuint*)array);
+	glUniform1iv(3, (size+3)/2, (const GLuint*)array);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, outTex);

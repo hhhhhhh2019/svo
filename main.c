@@ -42,7 +42,7 @@ int main() {
 	init_shaders();
 	init_render();
 
-	//srand(100);
+	srand(100);
 
 	camera_pos = (vec3f){0,0,-32};
 
@@ -56,7 +56,7 @@ int main() {
 				char ids[16];
 				coords_to_ids(x,y,z, ids);
 
-				char skip = 0;
+				/*char skip = 0;
 
 				for (int i = 0; i < 16; i++) {
 					if (ids[i] == 7)
@@ -64,6 +64,9 @@ int main() {
 				}
 
 				if (skip == 1)
+					continue;*/
+
+				if ((x&y&z)!=0)
 					continue;
 
 				Voxel* vox = malloc(sizeof(Voxel));
@@ -116,7 +119,7 @@ int main() {
 		long now_time = millis();
 		delta = (float)(now_time - last_time) / 1000.;
 		float fps = 1. / delta;
-		//printf("%f\n", fps);
+		printf("%f\n", fps);
 		last_time = now_time;
 	}
 
