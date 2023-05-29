@@ -19,7 +19,7 @@ xcb_generic_event_t* ev;
 int mouse_vel_x = 0;
 int mouse_vel_y = 0;
 
-float move_speed = 10.;
+float move_speed = 30.;
 float rot_speed = 0.01;
 
 vec3f camera_vel = {0,0,0};
@@ -42,32 +42,22 @@ int main() {
 	init_shaders();
 	init_render();
 
-	srand(100);
+	//glXSwapIntervalEXT(display, glxwindow, 4);
+
+	//srand(100);
 
 	camera_pos = (vec3f){0,0,-32};
-
-	//Model obj1 = load_model_from_file("object.oct");
 
 	Model obj1 = create_empty_model(3);
 
 	for (int x = 0; x < 2<<(obj1.tree.levels-1); x++) {
 		for (int y = 0; y < 2<<(obj1.tree.levels-1); y++) {
 			for (int z = 0; z < 2<<(obj1.tree.levels-1); z++) {
+				if ((x&y)!=0)
+					continue;
+
 				char ids[16];
 				coords_to_ids(x,y,z, ids);
-
-				/*char skip = 0;
-
-				for (int i = 0; i < 16; i++) {
-					if (ids[i] == 7)
-						skip = 1;
-				}
-
-				if (skip == 1)
-					continue;*/
-
-				if ((x&y&z)!=0)
-					continue;
 
 				Voxel* vox = malloc(sizeof(Voxel));
 				vox->color[0] = rand()&255;
@@ -98,7 +88,7 @@ int main() {
 					if (cm->data.data32[0] == delte_window_atom)
 						running = 0;
 
-					break;
+		break;
 				case XCB_KEY_PRESS:
 					key_press(((xcb_key_press_event_t*)ev)->detail);
 

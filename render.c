@@ -104,110 +104,67 @@ void update_camera_rot_mat() {
 
 
 
-void save_node_to_array(ONode*, unsigned short**, int*);
+void save_node_to_array(ONode*, unsigned int**, int*);
 
-void save_node_to_array(ONode* node, unsigned short** array, int* size) {
-	unsigned char childs = 0;
-	char childs_count = 0;
+void save_node_to_array(ONode* node, unsigned int** array, int* size) {
+	char childs = 0;
 
-	for (int i = 0; i < 8; i++) {
-		if (node->childs[i] != NULL) {
+	for (int i = 0; i < 8; i++)
+		if (node->childs[i] != NULL)
 			childs |= 1 << i;
-			childs_count++;
-		}
-	}
 
-	if (childs == 0) {
-		if (node->data == NULL)
-			return;
-		Voxel* v = node->data;
-		*size += 3 + 1;
-		*array = realloc(*array, *size*2);
-		(*array)[*size - 3 - 1] = 0;
-		(*array)[*size - 3 + 0] = v->color[0];
-		(*array)[*size - 3 + 1] = v->color[1];
-		(*array)[*size - 3 + 2] = v->color[2];
+	if (childs == 0)
 		return;
-	}
 
-	*size += childs_count + 1;
-	*array = realloc(*array, *size*2);
-
-	(*array)[*size - childs_count - 1] = childs;
-
-	int fst = *size - childs_count;
+	char leafs = 0;
 
 	for (int i = 0; i < 8; i++) {
 		if (node->childs[i] == NULL)
 			continue;
 
-		int last_size = *size;
-
-		save_node_to_array(node->childs[i], array, size);
-
-		(*array)[fst++] = last_size;
-
-		last_size = *size;
+		if (node->childs[i]->data_dist == 1)
+			leafs |= 1 << i;
 	}
+
+	(*size)++;
+	*array = realloc(*array, (*size)*4);
+
+	unsigned int value = (*size << 16) | (childs << 8) | leafs;
+
+	(*array)[*size-1] = value;
+
+	for (int i = 0; i < 8; i++)
+		if (node->childs[i] != NULL)
+			save_node_to_array(node->childs[i], array, size);
 }
 
 
 
-unsigned short* array = NULL;
-int size;
-
-void print_node2(unsigned short**, int);
-
-void print_node2(unsigned short** array, int level) {
-	char childs = **array;
-	*array += 2;
-
-	putc('\n', stdout);
-
-	for (int i = 0; i < level; i++)
-		putc('\t', stdout);
-
-	printf("%u, ", childs&0xff);
-
-	for (int i = 0; i < 8; i++) {
-		if ((childs & (1 << i)) != 0) {
-			printf("%u, ", **array & 0xffff);
-			*array += 2;
-		}
-	}
-
-	if (childs == 0) {
-		printf("%u, ", (**array) & 0xff);
-		*array += 2;
-		printf("%u, ", (**array) & 0xff);
-		*array += 2;
-		printf("%u, ", (**array) & 0xff);
-		*array += 2;
-		return;
-	}
-}
+//unsigned int* array = NULL;
+//int size;
 
 
 void render_model(Model model) {
-	if (array == NULL) {
+	/*if (array == NULL) {
+		size = 0;
 		array = malloc(0);
 
 		save_node_to_array(model.tree.root, &array, &size);
 
-		//unsigned short* a = array;
 
-		//print_node2(&a, 0);
-		//fflush(stdout);
-	}
+		/*printf("%d\n", size);
 
-	/*unsigned short array[] = {
-	};
-	int size = sizeof(array);*/
+		for (int i = 0; i < size; i++)
+			printf("%u %u %u\n", array[i] >> 16, (array[i] & 0xff00) >> 8, array[i] & 0xff);*
+	}*/
+
+	unsigned int array[] = {66046u,196352u,719365u,1111306u,1504267u,1798287u,2010960u,2383776u,2760672u,3081212u,3244159u,3317855u,3448927u,3604224u,4127237u,4521728u,4997311u,5075087u,5308160u,5821483u,6094592u,6583690u,6924885u,7205389u,7533324u,7879365u,8190469u,8581900u,8917486u,9045243u,9153109u,9436928u,9961216u,10485504u,10945277u,11012853u,11206400u,11685298u,11992832u,12474280u,12782835u,12914672u,13238016u,13729664u,14169036u,14418430u,14484221u,14565312u,14946798u,33023u,57599u,12543u,52479u,41727u,51455u,52479u,8447u,65535u,52479u,52479u,65535u,65535u,57599u,61695u,35071u,65535u,43775u,65535u,61695u,65535u,62207u,65535u,65535u,65535u,65535u,65535u,49407u,61695u,20735u,12543u,52479u,50431u,65535u,65535u,52479u,52479u,65535u,65535u,20735u,50431u,65535u,54783u,65535u,65535u,65535u,65535u,65535u,65535u,65535u,65535u,62975u,28927u,65535u,12543u,65535u,33023u,61695u,56831u,14335u,12543u,60159u,65535u,47871u,65535u,61695u,61695u,65535u,65535u,29695u,12543u,65535u,511u,8447u,47103u,49407u,63743u,65535u,19711u,8959u,1535u,61695u,61695u,65535u,65535u,13311u,12799u,4351u,30719u,5631u,35071u,35071u,35071u,767u,52479u,52479u,65535u,65535u,52479u,52479u,8191u,49151u,35583u,65535u,44031u,65535u,2303u,36863u,2815u,45055u,65535u,65535u,65535u,65535u,53247u,61439u,65535u,65535u,3327u,2815u,767u,52479u,52479u,65535u,65535u,52479u,52479u,65535u,65535u,52479u,65535u,56831u,19967u,65535u,65535u,65535u,65535u,65535u,65535u,65535u,65535u,65535u,13311u,65535u,24575u,24575u,3327u,1279u,4095u,3583u,4095u,511u,61183u,65535u,65535u,65535u,61183u,57343u,49151u,32767u,65535u,65535u,22527u,1023u,4095u,4095u,511u,13311u,13311u,767u,1023u,4607u,1279u,65535u,65535u,13311u,13311u,16383u,8191u,30719u,511u};
+	int size = sizeof(array);
 
 
 	glUseProgram(comp_prog);
 
-	glUniform1iv(3, (size+3)/2, (const GLuint*)array);
+	glUniform1iv(3, size, (const GLint*)array);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, outTex);

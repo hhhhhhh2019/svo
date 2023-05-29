@@ -1,6 +1,6 @@
 LIBS = xcb xcb-xfixes x11 x11-xcb gl
 
-CC = gcc -I ./include -c -fsanitize=address -g `pkg-config --cflags $(LIBS)`
+CC = gcc -I ./include -c -fsanitize=address -g `pkg-config --cflags $(LIBS)` -Wno-implicit-function-declaration
 LD = gcc -fsanitize=address -g `pkg-config --libs $(LIBS)` -lm
 
 
