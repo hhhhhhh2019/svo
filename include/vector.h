@@ -2,9 +2,17 @@
 #define VECTOR_H
 
 
-typedef struct {
-	float x,y,z;
+typedef union {
+	struct {float x,y,z;};
+	float data[3];
 } vec3f;
+
+#define vec3f(vx,vy,vz) (vec3f){.x=vx,.y=vy,.z=vz}
+
+typedef union {
+	struct {float x,y;};
+	float data[2];
+} vec2f;
 
 typedef struct {
 	float a,b,c, d,e,f, g,h,i;

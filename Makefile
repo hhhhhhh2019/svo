@@ -1,20 +1,15 @@
-LIBS = xcb xcb-xfixes x11 x11-xcb gl
+all: voxelizer main
 
-CC = gcc -I ./include -c -fsanitize=address -g `pkg-config --cflags $(LIBS)` -Wno-implicit-function-declaration
-LD = gcc -fsanitize=address -g `pkg-config --libs $(LIBS)` -lm
+make_dirs:
+	mkdir -p bin
 
+main: make_dirs
+	make -C src
 
-SOURCES = $(wildcard *.c)
-OBJECTS = $(SOURCES:.c=.o)
-
-
-
-%.o: %.c
-	$(CC) $< -o $@
-
-all: $(OBJECTS)
-	$(LD) $^ -o main
-
+voxelizer: make_dirs
+	make -C voxelizer
 
 clean:
-	rm *.o main -rf
+	make -C src clean
+	make -C voxelizer clean
+	rm ./bin -r

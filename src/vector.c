@@ -3,35 +3,35 @@
 
 
 vec3f vsum(vec3f a, vec3f b) {
-	return (vec3f){a.x + b.x, a.y + b.y, a.z + b.z};
+	return vec3f(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
 vec3f vsub(vec3f a, vec3f b) {
-	return (vec3f){a.x - b.x, a.y - b.y, a.z - b.z};
+	return vec3f(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
 vec3f vmul(vec3f a, vec3f b) {
-	return (vec3f){a.x * b.x, a.y * b.y, a.z * b.z};
+	return vec3f(a.x * b.x, a.y * b.y, a.z * b.z);
 }
 
 vec3f vmulf(vec3f a, float b) {
-	return (vec3f){a.x * b, a.y * b, a.z * b};
+	return vec3f(a.x * b, a.y * b, a.z * b);
 }
 
 vec3f vmulm(vec3f a, mat3 b) {
-	return (vec3f){
+	return vec3f(
 		a.x * b.a + a.y * b.b + a.z * b.c,
 		a.x * b.d + a.y * b.e + a.z * b.f,
 		a.x * b.g + a.y * b.h + a.z * b.i
-	};
+	);
 }
 
 vec3f vdiv(vec3f a, vec3f b) {
-	return (vec3f){a.x / b.x, a.y / b.y, a.z / b.z};
+	return vec3f(a.x / b.x, a.y / b.y, a.z / b.z);
 }
 
 vec3f vdivf(vec3f a, float b) {
-	return (vec3f){a.x / b, a.y / b, a.z / b};
+	return vec3f(a.x / b, a.y / b, a.z / b);
 }
 
 
@@ -82,9 +82,9 @@ vec3f vnormalize(vec3f v) {
 
 
 vec3f vmin3(vec3f a, vec3f b) {
-	return (vec3f){fmin(a.x,b.x), fmin(a.y,b.y), fmin(a.z,b.z)};
+	return vec3f(fmin(a.x,b.x), fmin(a.y,b.y), fmin(a.z,b.z));
 }
 
 vec3f vmax3(vec3f a, vec3f b) {
-	return (vec3f){fmax(a.x,b.x), fmax(a.y,b.y), fmax(a.z,b.z)};
+	return vec3f(fmax(a.x,b.x), fmax(a.y,b.y), fmax(a.z,b.z));
 }

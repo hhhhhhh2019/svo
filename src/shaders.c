@@ -1,5 +1,6 @@
 #include <shaders.h>
 #include <window.h>
+#include <utils.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -7,26 +8,6 @@
 
 int render_prog;
 int comp_prog;
-
-
-void read_file(char* filename, char** buf) {
-	FILE *f = fopen(filename, "r");
-
-	if (f == NULL) {
-		perror("fopen");
-		exit(errno);
-	}
-
-	fseek(f, 0, SEEK_END);
-	int size = ftell(f);
-	rewind(f);
-
-	*buf = calloc(size + 1, 1);
-
-	fread(*buf, 1, size, f);
-
-	fclose(f);
-}
 
 
 int create_shader(char* source, int type) {
@@ -71,9 +52,11 @@ void init_shaders() {
 	char* frag_source;
 	char* comp_source;
 
-	read_file("shader.vert", &vert_source);
-	read_file("shader.frag", &frag_source);
-	read_file("shader.comp", &comp_source);
+	int tmp;
+
+	read_file("shader.vert", &vert_source, &tmp);
+	read_file("shader.frag", &frag_source, &tmp);
+	read_file("shader.comp", &comp_source, &tmp);
 
 	int vert_shader = create_shader(vert_source, GL_VERTEX_SHADER);
 	int frag_shader = create_shader(frag_source, GL_FRAGMENT_SHADER);
