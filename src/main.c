@@ -87,7 +87,7 @@ int main() {
 		long now_time = millis();
 		delta = (float)(now_time - last_time) / 1000.;
 		float fps = 1. / delta;
-		//printf("%f\n", fps);
+		printf("%f\n", fps);
 		last_time = now_time;
 	}
 

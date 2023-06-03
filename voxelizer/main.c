@@ -159,7 +159,7 @@ https://habr.com/ru/articles/350782/
 		(*size)++;
 		*array = realloc(*array, (*size)*sizeof(unsigned int));
 
-		unsigned short fst = *size + queue_size;
+		unsigned short fst = queue_size+1;
 
 		(*array)[(*size)-1] = ((fst & 0xffff) << 16) | ((childs & 0xff) << 8) | (leafs & 0xff);
 
@@ -289,12 +289,14 @@ int main(int argc, char** argv) {
 	for (int i = 0; i < parsed_file.faces_count; i++) {
 		obj_face* face = &parsed_file.faces[i];
 
-		for (int j = 0; j < face->count - 2; j++) {
+		for (int j = 2; j < face->count; j++) {
 			faces = realloc(faces, sizeof(int) * 3 * (++faces_count));
 
-			faces[(faces_count-1)*3+0] = face->vertexes[j+0];
-			faces[(faces_count-1)*3+1] = face->vertexes[j+1];
-			faces[(faces_count-1)*3+2] = face->vertexes[j+2];
+			faces[(faces_count-1)*3+0] = face->vertexes[0];
+			faces[(faces_count-1)*3+1] = face->vertexes[j-1];
+			faces[(faces_count-1)*3+2] = face->vertexes[j];
+
+			//printf("%d %d %d\n", faces[(faces_count-1)*3+0], faces[(faces_count-1)*3+1], faces[(faces_count-1)*3+2]);
 		}
 	}
 
@@ -343,12 +345,11 @@ int main(int argc, char** argv) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, outTex);
 
-	glDrawElements(GL_TRIANGLES, parsed_file.faces_count * 3, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, faces_count * 3, GL_UNSIGNED_INT, 0);
 
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 	glReadPixels(0,0,resolution,resolution, GL_RGBA, GL_FLOAT, image);
-
 
 	glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_FLOAT, voxel_pos);
 
@@ -370,7 +371,7 @@ int main(int argc, char** argv) {
 		add_data(&tree, levels, ids, malloc(0));
 	}
 
-	//printf("%d\n", vc);
+	printf("%d\n", vc);
 
 
 

@@ -137,14 +137,11 @@ void main() {
 			}
 
 			if (leaf) {
-				/*tmin = min(t,tmin);
-				if (t > tmin)
-					continue;
-				color = vec4(1./t+0.1);
-				//break;*/
+				//tmin = min(t,tmin);
+				//color = mix(color, vec4(1./t+0.1), step(t,tmin));
 				color += vec4(0.1,0,0,0);
 			} else {
-				push(group_offset+cfst, pos+dp, size, t);
+				push(group_offset+cfst+fst, pos+dp, size, t);
 				cfst++;
 			}
 		}

@@ -46,30 +46,27 @@ void main() {
 	}
 
 
-	float h_pixel = 1./resolution;
+	float h_pixel = 2./resolution;
 
-	vec3 a = gl_in[0].gl_Position.xyz;
-	vec3 b = gl_in[1].gl_Position.xyz;
-	vec3 c = gl_in[2].gl_Position.xyz;
+	vec3 a = (gl_in[0].gl_Position * proj).xyz;
+	vec3 b = (gl_in[1].gl_Position * proj).xyz;
+	vec3 c = (gl_in[2].gl_Position * proj).xyz;
 
 	vec3 center = (a+b+c) / 3;
 
-	a += (a-center)*h_pixel;
-	b += (b-center)*h_pixel;
-	c += (c-center)*h_pixel;
+	a += normalize(a-center)*h_pixel;
+	b += normalize(b-center)*h_pixel;
+	c += normalize(c-center)*h_pixel;
 
 
-	gl_Position = vec4(a, 1) * proj;
-	vertex = gl_Position.xyz;
-	gl_Position.z = 0;
+	gl_Position = vec4(a.xy, 0, 1);
+	vertex = a;
 	EmitVertex();
-	gl_Position = vec4(b, 1) * proj;
-	vertex = gl_Position.xyz;
-	gl_Position.z = 0;
+	gl_Position = vec4(b.xy, 0, 1);
+	vertex = b;
 	EmitVertex();
-	gl_Position = vec4(c, 1) * proj;
-	vertex = gl_Position.xyz;
-	gl_Position.z = 0;
+	gl_Position = vec4(c.xy, 0, 1);
+	vertex = c;
 	EmitVertex();
 	EndPrimitive();
 }
