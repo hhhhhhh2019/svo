@@ -25,6 +25,8 @@ int VBO;
 int VAO;
 
 int outTex;
+int data_buffer;
+int data_tex;
 
 
 void init_render() {
@@ -51,6 +53,12 @@ void init_render() {
 	glBindImageTexture(0, outTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	glTexStorage2D(GL_TEXTURE_2D, 8, GL_RGBA32F, window_width,window_height);
+
+
+	glGenBuffers(1, &data_buffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, data_buffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 65536 * 4, NULL, GL_STREAM_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, data_buffer);
 }
 
 
@@ -107,7 +115,16 @@ void update_camera_rot_mat() {
 void render_model(Model model) {
 	glUseProgram(comp_prog);
 
-	glUniform1iv(3, model.data_size/4, (const GLint*)model.data);
+	unsigned int a[] = {
+		(7 << 8) | 7
+	};
+
+	//glUniform1iv(3, model.data_size/4, (const GLint*));
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, data_buffer);
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, model.data_size, model.data);
+
+	glUniform1iv(3, 0, data_buffer);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, outTex);

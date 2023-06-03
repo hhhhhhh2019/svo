@@ -7,7 +7,7 @@ layout(rgba32f, binding = 0) uniform image2D output_tex;
 layout(location = 0) uniform vec2 resolution;
 layout(location = 1) uniform vec3 cam_pos;
 layout(location = 2) uniform mat3 rotation;
-layout(location = 3) uniform int tree[16000];
+layout(std430, binding = 1) buffer octree { uint tree[]; };
 
 
 vec3 poses[8] = {
@@ -22,7 +22,7 @@ vec3 poses[8] = {
 };
 
 
-//#define get_tree_data(fst) ((uint(tree[(fst)/2]) >> ((fst & 1) * 16)) & 0xffff)
+#define get_tree_data(fst) tree[fst]
 
 
 bool ray_box(vec3 ro, vec3 rd, float size, out float t) {
@@ -81,6 +81,10 @@ void main() {
 
 	vec4 color = vec4(0);
 
+	/*uint d = get_tree_data(1);
+	if (d == 2)
+		color = vec4(1);*/
+
 
 	float tmin = 1./0.;
 	float root_t;
@@ -104,15 +108,15 @@ void main() {
 		pop(fst,pos,size,t);
 
 
-		int data = tree[fst];
+		uint data = get_tree_data(fst);
 
-		int group_offset = data >> 16;
-		int childs = (data & 0xff00) >> 8;
-		int leafs = data & 0xff;
+		uint group_offset = data >> 16;
+		uint childs = (data & 0xff00) >> 8;
+		uint leafs = data & 0xff;
 
-		int cfst = 0;
+		uint cfst = 0;
 
-		color += vec4(0.02);
+		color += vec4(0.01);
 
 		size *= 0.5;
 
