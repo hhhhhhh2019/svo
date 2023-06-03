@@ -134,7 +134,7 @@ void save_svo_to_array(SVO tree, unsigned int** array, int* size) {
 	while (queue_size > 0) {
 		ONode* node = queue[0];
 		queue_size--;
-
+https://habr.com/ru/articles/350782/
 		ONode** queue_new = malloc(sizeof(ONode*)*queue_size);
 		memcpy(queue_new, &queue[1], sizeof(ONode*)*queue_size);
 		free(queue);
@@ -183,7 +183,7 @@ void save_svo_to_array(SVO tree, unsigned int** array, int* size) {
 
 
 
-const int levels = 6;
+const int levels = 8;
 
 const int resolution = 1<<levels;
 const float fres = resolution;
@@ -320,13 +320,26 @@ int main(int argc, char** argv) {
 	init_shaders_vox();
 
 
-	float scale = 2./(max_x-min_x);
+	float scalex = 2./(max_x-min_x);
+	float scaley = 2./(max_y-min_y);
+	float scalez = 2./(max_z-min_z);
+
+	float scale = fmin(fmin(scalex, scaley), scalez);
+
+	float offset[3] = {
+		(max_x+min_x)*0.5,
+		(max_y+min_y)*0.5,
+		(max_z+min_z)*0.5,
+	};
+
+	printf("%f %f %f %f\n", scale, offset[0], offset[1], offset[2]);
 
 
 
 	glUseProgram(vox_prog);
 	glUniform1fv(5, 1, &fres);
 	glUniform1fv(6, 1, &scale);
+	glUniform3fv(7, 1, &offset);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, outTex);
 
@@ -357,7 +370,7 @@ int main(int argc, char** argv) {
 		add_data(&tree, levels, ids, malloc(0));
 	}
 
-	printf("%d\n", vc);
+	//printf("%d\n", vc);
 
 
 

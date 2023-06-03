@@ -30,7 +30,7 @@ void main() {
 	} else if (ay > ax && ay > az) {
 		proj = mat4(
 			1,0,0,0,
-			0,0,-1,0,
+			0,0,1,0,
 			0,1,0,0,
 			0,0,0,1
 		);
@@ -61,12 +61,15 @@ void main() {
 
 	gl_Position = vec4(a, 1) * proj;
 	vertex = gl_Position.xyz;
+	gl_Position.z = 0;
 	EmitVertex();
 	gl_Position = vec4(b, 1) * proj;
 	vertex = gl_Position.xyz;
+	gl_Position.z = 0;
 	EmitVertex();
 	gl_Position = vec4(c, 1) * proj;
 	vertex = gl_Position.xyz;
+	gl_Position.z = 0;
 	EmitVertex();
 	EndPrimitive();
 }

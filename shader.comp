@@ -93,7 +93,7 @@ void main() {
 
 	uint iters = 0;
 
-	while (sp > 0 && iters < 100) {
+	while (sp > 0 && iters < 200) {
 		iters++;
 
 		uint fst;
@@ -112,7 +112,7 @@ void main() {
 
 		int cfst = 0;
 
-		//color += vec4(0.05);
+		color += vec4(0.02);
 
 		size *= 0.5;
 
@@ -133,11 +133,12 @@ void main() {
 			}
 
 			if (leaf) {
-				tmin = min(t,tmin);
+				/*tmin = min(t,tmin);
 				if (t > tmin)
 					continue;
 				color = vec4(1./t+0.1);
-				//break;
+				//break;*/
+				color += vec4(0.1,0,0,0);
 			} else {
 				push(group_offset+cfst, pos+dp, size, t);
 				cfst++;
