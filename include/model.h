@@ -6,7 +6,7 @@
 
 
 typedef struct {
-	unsigned int data_size;
+	unsigned int resolution;
 	unsigned int* data;
 	vec3f pos;
 	vec3f rot;

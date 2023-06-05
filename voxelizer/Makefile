@@ -1,4 +1,4 @@
-LIBS = xcb xcb-xfixes x11 x11-xcb gl libpng
+LIBS = xcb xcb-xfixes x11 x11-xcb gl
 
 CC_FLAGS = -I ../include -c -fsanitize=address -g `pkg-config --cflags $(LIBS)` -Wno-implicit-function-declaration
 LD_FLAGS = -fsanitize=address -g `pkg-config --libs $(LIBS)` -lm

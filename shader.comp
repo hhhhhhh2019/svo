@@ -1,4 +1,4 @@
-#version 460
+#version 460 core
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D output_tex;
@@ -7,67 +7,77 @@ layout(rgba32f, binding = 0) uniform image2D output_tex;
 layout(location = 0) uniform vec2 resolution;
 layout(location = 1) uniform vec3 cam_pos;
 layout(location = 2) uniform mat3 rotation;
-layout(std430, binding = 1) buffer octree { uint tree[]; };
+layout(location = 3) uniform sampler3D voxels;
 
 
-vec3 poses[8] = {
-	vec3( 0.5, 0.5, 0.5),
-	vec3(-0.5, 0.5, 0.5),
-	vec3( 0.5,-0.5, 0.5),
-	vec3(-0.5,-0.5, 0.5),
-	vec3( 0.5, 0.5,-0.5),
-	vec3(-0.5, 0.5,-0.5),
-	vec3( 0.5,-0.5,-0.5),
-	vec3(-0.5,-0.5,-0.5)
-};
+#define TSQRT2 2.828427
+#define SQRT2 1.414213
+#define ISQRT2 0.707106
+
+const float VOXEL_SIZE = 1./(1<<6);
 
 
-#define get_tree_data(fst) tree[fst]
+bool isInsideCube(const vec3 p, float e) { return abs(p.x) < 1 + e && abs(p.y) < 1 + e && abs(p.z) < 1 + e; }
 
 
-bool ray_box(vec3 ro, vec3 rd, float size, out float t) {
-	float idx = 1. / rd.x;
-	float idy = 1. / rd.y;
-	float idz = 1. / rd.z;
+vec4 get_diffuse(vec3 ro, vec3 rd, float spread) {
+	vec4 acc = vec4(0);
+	float dist = 0.1953125;
 
-	float t1 = (-size - ro.x) * idx;
-	float t2 = ( size - ro.x) * idx;
-	float t3 = (-size - ro.y) * idy;
-	float t4 = ( size - ro.y) * idy;
-	float t5 = (-size - ro.z) * idz;
-	float t6 = ( size - ro.z) * idz;
+	while(dist < SQRT2 && acc.a < 1){
+		vec3 c = ro + rd * dist;
+		//if (!isInsideCube(p,0)) break;
+		c = c * 0.5 + 0.5;
+		float l = 1 + spread * dist / VOXEL_SIZE;
+		float level = log2(l);
+		float ll = (level + 1) * (level + 1);
+		vec4 voxel = textureLod(voxels, c, level);
+		acc += 0.075 * ll * voxel * pow(1 - voxel.a, 2);
+		dist += ll * VOXEL_SIZE * 2;
+	}
 
-	float tmin = max(max(min(t1,t2), min(t3,t4)), min(t5,t6));
-	float tmax = min(min(max(t1,t2), max(t3,t4)), max(t5,t6));
-
-	t = tmin;
-
-	return tmax >= 0 && tmin < tmax;
+	return pow(acc * 2.0, vec4(1.5));
 }
 
 
+vec4 get_specular(vec3 ro, vec3 rd, inout float dist) {
+	vec4 acc = vec4(0);
 
-uint stack_fst[512];
-vec3 stack_pos[512];
-float stack_size[512];
-float stack_t[512];
+	while (dist < 1.) {
+		vec3 p = ro + rd * dist;
+		//if (!isInsideCube(p,0)) break;
+		p = p * 0.5 + 0.5;
+		float level = 0.1 * log2(1 + dist / VOXEL_SIZE);
+		vec4 v = textureLod(voxels, p, level);
+		float f = 1. - acc.a;
+		acc.rgb += 0.25 * v.rgb * v.a * f * (1. - dist);
+		acc.a += 0.25 * v.a * f;
+		dist += VOXEL_SIZE * (1.0f + 0.125f * level);
+	}
 
-uint sp = 0;
-
-void push(in uint fst, in vec3 pos, in float size, in float t) {
-	stack_fst[sp] = fst;
-	stack_pos[sp] = pos;
-	stack_size[sp] = size;
-	stack_t[sp] = t;
-	sp++;
+	return acc;
 }
 
-void pop(out uint fst, out vec3 pos, out float size, out float t) {
-	sp--;
-	fst = stack_fst[sp];
-	pos = stack_pos[sp];
-	size = stack_size[sp];
-	t = stack_t[sp];
+
+vec4 get_shadow(vec3 ro, vec3 rd, float shadow_dist) {
+	float acc = 0;
+
+	float dist = 3 * VOXEL_SIZE;
+
+	const float STOP = shadow_dist - 16 * VOXEL_SIZE;
+
+	while(dist < STOP && acc < 1){
+		vec3 p = ro + rd * dist;
+		//if(!isInsideCube(p, 0)) break;
+		p = p * 0.5 + 0.5;
+		float l = pow(dist, 2);
+		float s1 = 0.062 * textureLod(voxels, p, 1 + 0.75 * l).a;
+		float s2 = 0.135 * textureLod(voxels, p, 4.5 * l).a;
+		float s = s1 + s2;
+		acc += (1 - acc) * s;
+		dist += 0.9 * VOXEL_SIZE * (1 + 0.05 * l);
+	}
+	return vec4(1) - pow(smoothstep(0, 1, acc * 1.4), 1.0 / 1.4);
 }
 
 
@@ -79,74 +89,16 @@ void main() {
 	vec3 rd = normalize(vec3(uv,1)) * rotation;
 	vec3 ro = cam_pos;
 
+	vec3 light_dir = normalize(vec3(0,-1,0));
+
 	vec4 color = vec4(0);
+	float dist = 0;
 
-	/*uint d = get_tree_data(1);
-	if (d == 2)
-		color = vec4(1);*/
-
-
-	float tmin = 1./0.;
-	float root_t;
-	float root_size = 16;
+	vec4 diffuse = get_diffuse(ro,rd, 0.325);
+	vec4 specular = get_specular(ro,rd, dist);
 
 
-	if (ray_box(ro, rd, root_size, root_t))
-		push(0, vec3(0), root_size, root_t);
-
-
-	uint iters = 0;
-
-	while (sp > 0 && iters < 200) {
-		iters++;
-
-		uint fst;
-		vec3 pos;
-		float size;
-		float t;
-
-		pop(fst,pos,size,t);
-
-
-		uint data = get_tree_data(fst);
-
-		uint group_offset = data >> 16;
-		uint childs = (data & 0xff00) >> 8;
-		uint leafs = data & 0xff;
-
-		uint cfst = 0;
-
-		color += vec4(0.01);
-
-		size *= 0.5;
-
-		for (int i = 0; i < 8; i++) {
-			vec3 dp = poses[i] * size*2;
-
-			bool empty = (childs & (1 << i)) == 0;
-			bool leaf =  ( leafs & (1 << i)) != 0;
-
-			if (empty)
-				continue;
-
-			if (!ray_box(ro+pos+dp,rd, size, t)) {
-				if (!leaf)
-					cfst++;
-
-				continue;
-			}
-
-			if (leaf) {
-				//tmin = min(t,tmin);
-				//color = mix(color, vec4(1./t+0.1), step(t,tmin));
-				color += vec4(0.1,0,0,0);
-			} else {
-				push(group_offset+cfst+fst, pos+dp, size, t);
-				cfst++;
-			}
-		}
-	}
-
+	color = specular + diffuse * 0.5;
 
 	imageStore(output_tex, pos, color);
 }

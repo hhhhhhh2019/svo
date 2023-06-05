@@ -19,7 +19,7 @@ xcb_generic_event_t* ev;
 int mouse_vel_x = 0;
 int mouse_vel_y = 0;
 
-float move_speed = 30.;
+float move_speed = 1.;
 float rot_speed = 0.01;
 
 vec3f camera_vel = vec3f(0,0,0);
@@ -46,7 +46,7 @@ int main() {
 
 	//srand(100);
 
-	camera_pos = vec3f(0,0,-32);
+	camera_pos = vec3f(0,0,0);
 
 	Model obj1 = load_model_from_file("object.mdl");
 

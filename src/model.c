@@ -21,17 +21,11 @@ Model load_model_from_file(char* filename) {
 		exit(errno);
 	}
 
-	read(f, &model.data_size, sizeof(model.data_size));
+	read(f, &model.resolution, sizeof(model.resolution));
 
-	printf("%d\n", model.data_size);
+	model.data = malloc(model.resolution*model.resolution*model.resolution*4*4);
 
-	model.data = malloc(model.data_size);
-
-	read(f, model.data, model.data_size);
-
-	for (int i = 0; i < model.data_size/4; i++) {
-		int a = model.data[i];
-	}
+	read(f, model.data, model.resolution*model.resolution*model.resolution*4*4);
 
 	close(f);
 
@@ -40,16 +34,5 @@ Model load_model_from_file(char* filename) {
 
 
 void save_model_to_file(Model model, char* filename) {
-	int f = open(filename, O_WRONLY|O_CREAT|O_TRUNC, 0644);
 
-	if (!f) {
-		perror("open");
-		exit(errno);
-	}
-
-	write(f, &model.data_size, sizeof(model.data_size));
-
-	write(f, model.data, model.data_size);
-
-	close(f);
 }

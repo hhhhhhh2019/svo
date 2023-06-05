@@ -46,7 +46,6 @@ void init_render() {
 
 
 	glGenTextures(1, &outTex);
-	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, outTex);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, window_width, window_height, 0, GL_RGBA, GL_FLOAT, NULL);
@@ -55,10 +54,17 @@ void init_render() {
 	glTexStorage2D(GL_TEXTURE_2D, 8, GL_RGBA32F, window_width,window_height);
 
 
-	glGenBuffers(1, &data_buffer);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, data_buffer);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 65536 * 4, NULL, GL_STREAM_DRAW);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, data_buffer);
+	glGenTextures(1, &data_tex);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_3D, data_tex);
+	//glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F, size,size,size, 0, GL_RGBA, GL_FLOAT, data);
+	glGenerateMipmap(GL_TEXTURE_3D);
+
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);//GL_NEAREST_MIPMAP_NEAREST);
+	//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 }
 
 
@@ -115,19 +121,10 @@ void update_camera_rot_mat() {
 void render_model(Model model) {
 	glUseProgram(comp_prog);
 
-	unsigned int a[] = {
-		(7 << 8) | 7
-	};
-
-	//glUniform1iv(3, model.data_size/4, (const GLint*));
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, data_buffer);
-	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, model.data_size, model.data);
-
-	glUniform1iv(3, 0, data_buffer);
-
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, outTex);
+	glBindTexture(GL_TEXTURE_3D, data_tex);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F, model.resolution,model.resolution,model.resolution, 0, GL_RGBA, GL_FLOAT, model.data);
+	glGenerateMipmap(GL_TEXTURE_3D);
 	glDispatchCompute((GLuint)window_width, (GLuint)window_height, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 

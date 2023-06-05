@@ -11,7 +11,7 @@ layout(location = 0, rgba32f) uniform image3D vox_pos;
 layout(location = 5) uniform float resolution;
 
 void main() {
-	color = vec3(vertex);
+	color = vertex;
 
 	vec3 pos = (vertex*0.5+0.5)*resolution;
 
